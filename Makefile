@@ -1,15 +1,20 @@
-CC = gcc -I/usr/include/libusb-1.0
-GXX = g++
-CXXFLAGS = -pipe -O2 -Wall -W -D_REENTRANT -lusb-1.0 -lm
-INCPATH = -I. -I/usr/include/libusb-1.0
+SANITIZERS ?=   -fsanitize=address -fsanitize=undefined \
+                -fsanitize=pointer-compare -fsanitize=pointer-subtract \
+                -fsanitize=leak -fno-sanitize-recover=all \
+                -fsanitize-address-use-after-scope \
+                -fstack-protector-all \
+                -fstack-protector-strong
 
-all: flirone.o flirone
+INCPATH = -I/usr/include/libusb-1.0
+CFLAGS = $(INCPATH) -pipe -O2 -Wall -D_REENTRANT -g $(SANITIZERS)
+
+all: flirone
 
 flirone.o: src/flirone.c src/plank.h
+	$(CC) $(CFLAGS) -c $< -o $@
 
-flirone: src/flirone.o
-	${CC} -o flirone src/flirone.o -lusb-1.0 -lm -Wall
+flirone: flirone.o
+	$(CC) -o $@ $< $(SANITIZERS) -lusb-1.0 -lm -g
 
 clean:
 	rm -f flirone.o flirone
-
